@@ -1,2 +1,2 @@
 # services
-Express server for service covid data.
+Express server routes for service covid data.
