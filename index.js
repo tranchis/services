@@ -13,6 +13,7 @@ let isoCountry = require('./assets/isoCountry.json');
 
 let countryMap = new Map()
 
+// Convert isoCountry to hashMap
 isoCountry.forEach(element => {
   try {
     countryMap.set(element.iso2, element)    
@@ -39,16 +40,15 @@ app.get('/airport', (req, res) => {
     res.send('tmp');
 });
 
+// Get worldwide aggregate data
 app.get('/worldwide-aggregated', (req, res) => {
   let flag = false;
     let date = req.query;
-    // console.log(date);
     getData()
     .then (() => {
       const data = require('./assets/worldAggregated.json');
       data.forEach(element => {
         if(date.date === element.Date) {
-          // console.log(element);
           flag = true;
           res.send(element);
         }
@@ -60,6 +60,7 @@ app.get('/worldwide-aggregated', (req, res) => {
     })
 });
 
+// Get country aggregate data
 app.get('/country-aggregated', (req, res) => {
     let flag = false;
     let date = req.query.date;
