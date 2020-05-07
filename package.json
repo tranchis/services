@@ -6,7 +6,6 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js"
-
   },
   "repository": {
     "type": "git",
@@ -20,6 +19,7 @@
   "homepage": "https://github.com/mishaldholakia/services#readme",
   "dependencies": {
     "cors": "^2.8.5",
+    "cors-anywhere": "^0.4.2",
     "csv2json": "^2.0.2",
     "express": "^4.17.1",
     "request": "^2.88.2"

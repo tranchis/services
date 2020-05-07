@@ -7,6 +7,23 @@ const csv2json = require('csv2json');
 const request = require('request');
 const fs = require('fs');
 
+// Listen on a specific host via the HOST environment variable
+var host = process.env.HOST || '0.0.0.0';
+// Listen on a specific port via the PORT environment variable
+var port1 = process.env.PORT || 4225;
+ 
+var cors_proxy = require('cors-anywhere');
+cors_proxy.createServer({
+    originWhitelist: [], // Allow all origins
+    requireHeader: ['origin', 'x-requested-with'],
+    removeHeaders: ['cookie', 'cookie2']
+}).listen(port1, host, function() {
+    console.log('Running CORS Anywhere on ' + host + ':' + port1);
+});
+
+
+
+
 let aggregatedFile = `./assets/worldAggregated.json`;
 let countryAggregatedFile = `./assets/countryAggregated.json`;
 let isoCountry = require('./assets/isoCountry.json');
@@ -84,6 +101,47 @@ app.get('/country-aggregated', (req, res) => {
     })
 });
 
+// Get country aggregate data
+app.get('/covid-aggregated', (req, res) => {
+
+  let flag = false;
+  let date = req.query.date;
+  let tmp = countryMap.get(req.query.country)
+  let country = tmp.Country_Region;
+  let tmpNumber = 0;
+  // console.log(date, country);
+  countryData()
+  .then (() => {
+    const data = require('./assets/countryAggregated.json');
+    let total = [];
+    for(let i=0;i<24; i++){
+      total.push("0");
+    }
+    data.forEach(element => {
+      if(country === element.Country) {
+        // console.log(element);
+        // let tmp = {
+        //   Date: element.Date,
+        //   Confirmed: element.Confirmed
+        // }
+        if(total.length<92) {
+          total.push(element.Confirmed);
+          flag = true;
+          tmpNumber+=1;
+        }
+      }
+    });
+    if(flag){
+      res.send({data: total});
+      total =[];
+    }
+    else {
+      let tmp = {status: "no data"};
+      res.send(tmp);
+    }
+  })
+})
+
 const countryData = () => new Promise((resolve, reject) => {
   request(countryAggregated)
   .pipe(csv2json({
@@ -92,7 +150,7 @@ const countryData = () => new Promise((resolve, reject) => {
   }))
   .pipe(fs.createWriteStream(countryAggregatedFile))
   .on('finish', () => {
-    console.log('wrote all data to file');
+    // console.log('wrote all data to file');
     resolve();
 });
 });
