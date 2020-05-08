@@ -108,7 +108,6 @@ app.get('/covid-aggregated', (req, res) => {
   let date = req.query.date;
   let tmp = countryMap.get(req.query.country)
   let country = tmp.Country_Region;
-  let tmpNumber = 0;
   // console.log(date, country);
   countryData()
   .then (() => {
@@ -124,11 +123,10 @@ app.get('/covid-aggregated', (req, res) => {
         //   Date: element.Date,
         //   Confirmed: element.Confirmed
         // }
-        if(total.length<92) {
+        // if(total.length<92) {
           total.push(element.Confirmed);
           flag = true;
-          tmpNumber+=1;
-        }
+        // }
       }
     });
     if(flag){
