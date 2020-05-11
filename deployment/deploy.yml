@@ -1,0 +1,46 @@
+---
+- name: Deploy covid19 services
+  hosts: production
+  remote_user: ansible
+  become: yes
+  tasks:
+    - name: Install docker module
+      pip:
+        name: docker
+    - name: Create network
+      docker_network:
+        name: covid_network
+        ipam_options:
+          subnet: '172.19.69.0/24'
+          gateway: '172.19.69.1'
+    - name: Log into registry
+      docker_login:
+        registry: "{{ lookup('env', 'REGISTRY_SERVER') }}"
+        username: gitlab-ci-token
+        password: "{{ lookup('env', 'CI_BUILD_TOKEN') }}"
+    - name: Pull images
+      docker_image:
+        name: "{{ lookup('env', 'REGISTRY_SERVER') }}/{{ lookup('env', 'GROUP_NAMESPACE') }}/covid19-services:{{ lookup('env', 'CI_PIPELINE_IID') }}"
+        force: yes
+    - name: Deploy images
+      docker_container:
+        name: "covid19.flight"
+        image: "{{ lookup('env', 'REGISTRY_SERVER') }}/{{ lookup('env', 'GROUP_NAMESPACE') }}/covid19-services:{{ lookup('env', 'CI_PIPELINE_IID') }}"
+        state: started
+        ports:
+          - "127.0.0.1:39500:4224"
+        networks:
+          - name: "covid_network"
+        memory: "2G"
+        restart_policy: always
+    - name: Expose flight app to the Internet
+      template:
+        src: nginx-services.conf
+        dest: /etc/nginx/conf.d/covid19-services.conf
+      register: template_services
+    - name: Restart nginx if config has changed
+      systemd:
+        name: nginx
+        state: restarted
+        enabled: yes
+      when: "{{ template_services.changed }}"

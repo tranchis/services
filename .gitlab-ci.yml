@@ -1,0 +1,26 @@
+build:
+  image: docker:stable
+  stage: build
+  script:
+    - docker login -u gitlab-ci-token -p ${CI_BUILD_TOKEN} ${REGISTRY_SERVER}
+    - docker build -t ${REGISTRY_SERVER}/${GROUP_NAMESPACE}/covid19-services:${CI_PIPELINE_IID} .
+    - docker push ${REGISTRY_SERVER}/${GROUP_NAMESPACE}/covid19-services:${CI_PIPELINE_IID}
+  only:
+    - master
+  except:
+    - schedules
+
+deploy:
+  image: hpaibsc/mini-ansible:0.0.6
+  stage: deploy
+  script:
+    - 'echo $ansible_ssh_key | base64 -d > /tmp/ssh-ansible ; chmod 600 /tmp/ssh-ansible'
+    - 'echo $ansible_password | base64 -d > /tmp/ansible-pass ; chmod 600 /tmp/ansible-pass'
+    - 'cd deployment/'
+    - >-
+      echo -e "[production]\n${TARGET_SERVER} ansible_python_interpreter=python3\n" > inventory
+    - 'ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook --vault-password-file=/tmp/ansible-pass --key-file=/tmp/ssh-ansible -i inventory deploy.yml'
+    - 'rm -f /tmp/ssh-ansible'
+    - 'rm -f /tmp/ansible-pass'
+  only:
+    - master
