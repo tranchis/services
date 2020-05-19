@@ -28,7 +28,7 @@
         image: "{{ lookup('env', 'REGISTRY_SERVER') }}/{{ lookup('env', 'GROUP_NAMESPACE') }}/covid19-services:{{ lookup('env', 'CI_PIPELINE_IID') }}"
         state: started
         ports:
-          - "127.0.0.1:39500:4224"
+          - "127.0.0.1:49500:4224"
         networks:
           - name: "covid_network"
         memory: "2G"
